@@ -1,0 +1,27 @@
+{
+  "short_name": "Rekod Solat",
+  "name": "Rekod Solat — Penjejak Ibadah",
+  "description": "Rekod solat fardhu, sunat dan qada dengan waktu solat JAKIM.",
+  "lang": "ms",
+  "dir": "ltr",
+  "icons": [
+    {
+      "src": "icon.svg",
+      "type": "image/svg+xml",
+      "sizes": "any",
+      "purpose": "any"
+    },
+    {
+      "src": "icon.svg",
+      "type": "image/svg+xml",
+      "sizes": "any",
+      "purpose": "maskable"
+    }
+  ],
+  "start_url": "./",
+  "scope": "./",
+  "background_color": "#0d4a3a",
+  "theme_color": "#0d4a3a",
+  "display": "standalone",
+  "orientation": "portrait-primary"
+}

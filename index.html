@@ -1,0 +1,2125 @@
+<!DOCTYPE html>
+<html lang="ms">
+<head>
+  <base target="_top">
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0, viewport-fit=cover">
+  <title>Rekod Solat | Penjejak Ibadah</title>
+
+  <link rel="manifest" href="manifest.json">
+  <meta name="mobile-web-app-capable" content="yes">
+  <meta name="apple-mobile-web-app-capable" content="yes">
+  <meta name="apple-mobile-web-app-status-bar-style" content="black-translucent">
+  <meta name="apple-mobile-web-app-title" content="Rekod Solat">
+  <meta name="theme-color" content="#0d4a3a">
+
+  <link rel="preconnect" href="https://fonts.googleapis.com">
+  <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+  <link href="https://fonts.googleapis.com/css2?family=Plus+Jakarta+Sans:wght@400;500;600;700;800&display=swap" rel="stylesheet">
+
+  <style>
+    :root {
+      --primary: #0d4a3a;
+      --primary-hover: #0a3a2d;
+      --primary-soft: #ecfdf5;
+      --accent: #10b981;
+      --accent-glow: #6ee7b7;
+
+      --bg: #f6f8f7;
+      --surface: #ffffff;
+      --text: #0f172a;
+      --text-muted: #64748b;
+      --border: #e2e8f0;
+      --border-light: #f1f5f9;
+
+      --ok: #059669;
+      --ok-bg: #ecfdf5;
+      --miss: #dc2626;
+      --miss-bg: #fef2f2;
+      --warn: #d97706;
+      --warn-bg: #fffbeb;
+
+      --radius: 14px;
+
+      --z-fab: 900;
+      --z-toast: 1100;
+      --z-modal: 1200;
+      --z-loading: 1400;
+    }
+
+    * {
+      box-sizing: border-box;
+      margin: 0;
+      padding: 0;
+      -webkit-tap-highlight-color: transparent;
+    }
+
+    body {
+      font-family: 'Plus Jakarta Sans', -apple-system, BlinkMacSystemFont, sans-serif;
+      background: var(--bg);
+      color: var(--text);
+      font-size: 14.5px;
+      line-height: 1.55;
+      -webkit-font-smoothing: antialiased;
+      overflow-x: hidden;
+      min-height: 100vh;
+      padding-bottom: 90px;
+    }
+
+    body.modal-open { overflow: hidden; }
+
+    .hidden { display: none !important; }
+
+    .sr-only {
+      position: absolute;
+      width: 1px; height: 1px;
+      padding: 0; margin: -1px;
+      overflow: hidden;
+      clip: rect(0, 0, 0, 0);
+      white-space: nowrap;
+      border: 0;
+    }
+
+    @keyframes shimmer {
+      0% { background-position: -200% 0; }
+      100% { background-position: 200% 0; }
+    }
+    .skeleton {
+      background: linear-gradient(90deg, #f1f5f9 25%, #e2e8f0 50%, #f1f5f9 75%);
+      background-size: 200% 100%;
+      animation: shimmer 1.5s infinite;
+      border-radius: 6px;
+      display: inline-block;
+    }
+
+    @keyframes spin { to { transform: rotate(360deg); } }
+    @keyframes fadeUp {
+      from { opacity: 0; transform: translateY(8px); }
+      to { opacity: 1; transform: translateY(0); }
+    }
+
+    /* ===== HEADER ===== */
+    .app-header {
+      background: linear-gradient(160deg, #0f5c47 0%, #0d4a3a 55%, #08301f 100%);
+      color: #fff;
+      padding: 22px 20px 26px;
+      border-radius: 0 0 24px 24px;
+      position: relative;
+      overflow: hidden;
+      box-shadow: 0 8px 28px -12px rgba(13, 74, 58, 0.55);
+    }
+    .app-header::before {
+      content: '';
+      position: absolute;
+      inset: 0;
+      background: radial-gradient(circle at 85% 10%, rgba(110, 231, 183, 0.22), transparent 55%);
+      pointer-events: none;
+    }
+    .header-top {
+      display: flex;
+      justify-content: space-between;
+      align-items: flex-start;
+      gap: 14px;
+      position: relative;
+    }
+    .header-title {
+      font-size: 20px;
+      font-weight: 800;
+      letter-spacing: -0.4px;
+      display: flex;
+      align-items: center;
+      gap: 9px;
+    }
+    .header-sub {
+      font-size: 12px;
+      color: #a7f3d0;
+      font-weight: 600;
+      margin-top: 3px;
+    }
+    .header-zon {
+      display: inline-flex;
+      align-items: center;
+      gap: 5px;
+      background: rgba(255, 255, 255, 0.13);
+      border: 1px solid rgba(255, 255, 255, 0.18);
+      border-radius: 20px;
+      padding: 3px 10px 3px 8px;
+      font-size: 11px;
+      font-weight: 700;
+      color: #d1fae5;
+      margin-top: 7px;
+      max-width: 100%;
+      overflow: hidden;
+      text-overflow: ellipsis;
+      white-space: nowrap;
+    }
+    .header-zon svg { width: 12px; height: 12px; fill: none; stroke: #6ee7b7; stroke-width: 2.2; flex-shrink: 0; }
+
+    .prayer-zon-label {
+      margin-top: 16px;
+      font-size: 10.5px;
+      font-weight: 800;
+      color: #a7f3d0;
+      text-transform: uppercase;
+      letter-spacing: 0.8px;
+      display: flex;
+      align-items: center;
+      gap: 6px;
+      position: relative;
+    }
+    .prayer-zon-label::after {
+      content: '';
+      flex: 1;
+      height: 1px;
+      background: rgba(255, 255, 255, 0.14);
+    }
+    .header-actions { display: flex; gap: 8px; flex-shrink: 0; }
+
+    .icon-btn {
+      width: 38px; height: 38px;
+      border-radius: 11px;
+      border: 1px solid rgba(255, 255, 255, 0.22);
+      background: rgba(255, 255, 255, 0.1);
+      color: #fff;
+      display: grid;
+      place-items: center;
+      cursor: pointer;
+      transition: background 0.15s ease;
+    }
+    .icon-btn:hover { background: rgba(255, 255, 255, 0.2); }
+    .icon-btn:focus-visible { outline: 2px solid var(--accent-glow); outline-offset: 2px; }
+    .icon-btn svg { width: 18px; height: 18px; fill: none; stroke: currentColor; stroke-width: 2.2; stroke-linecap: round; stroke-linejoin: round; }
+    .icon-btn.spinning svg { animation: spin 0.8s linear infinite; }
+
+    /* ===== WAKTU SOLAT ===== */
+    .prayer-strip {
+      display: grid;
+      grid-template-columns: repeat(6, 1fr);
+      gap: 8px;
+      margin-top: 18px;
+      position: relative;
+    }
+    .prayer-chip {
+      background: rgba(255, 255, 255, 0.11);
+      border: 1px solid rgba(255, 255, 255, 0.16);
+      border-radius: 12px;
+      padding: 10px 6px 9px;
+      text-align: center;
+      transition: all 0.2s ease;
+      position: relative;
+    }
+    .prayer-chip.next {
+      background: rgba(110, 231, 183, 0.24);
+      border-color: rgba(110, 231, 183, 0.55);
+      box-shadow: 0 0 0 1px rgba(110, 231, 183, 0.3), 0 6px 18px -8px rgba(110, 231, 183, 0.6);
+    }
+    .prayer-chip.past { opacity: 0.62; }
+    .prayer-name {
+      font-size: 10px;
+      font-weight: 800;
+      text-transform: uppercase;
+      letter-spacing: 0.5px;
+      color: #a7f3d0;
+    }
+    .prayer-chip.next .prayer-name { color: #ffffff; }
+    .prayer-time {
+      font-size: 13px;
+      font-weight: 800;
+      margin-top: 3px;
+      letter-spacing: -0.3px;
+      font-variant-numeric: tabular-nums;
+    }
+    .countdown {
+      margin-top: 14px;
+      text-align: center;
+      font-size: 12.5px;
+      font-weight: 700;
+      color: #d1fae5;
+      position: relative;
+    }
+    .countdown strong { color: #ffffff; font-size: 15px; font-variant-numeric: tabular-nums; }
+
+    /* ===== LAYOUT ===== */
+    main { padding: 18px 16px 0; max-width: 900px; margin: 0 auto; }
+
+    .card {
+      background: var(--surface);
+      border: 1px solid var(--border);
+      border-radius: var(--radius);
+      box-shadow: 0 1px 2px rgba(15, 23, 42, 0.04), 0 10px 28px -20px rgba(15, 23, 42, 0.16);
+      margin-bottom: 16px;
+      overflow: hidden;
+      animation: fadeUp 0.3s cubic-bezier(0.16, 1, 0.3, 1);
+    }
+    .card-header {
+      padding: 15px 18px;
+      border-bottom: 1px solid var(--border-light);
+      display: flex;
+      justify-content: space-between;
+      align-items: center;
+      gap: 10px;
+      flex-wrap: wrap;
+      background: linear-gradient(180deg, #fcfdfe 0%, #f8fafc 100%);
+    }
+    .card-header h2 { font-size: 15px; font-weight: 800; letter-spacing: -0.2px; }
+    .card-body { padding: 18px; }
+
+    /* ===== PEMILIH ===== */
+    .picker-row {
+      display: flex;
+      gap: 10px;
+      flex-wrap: wrap;
+      align-items: flex-end;
+    }
+    .field { flex: 1; min-width: 130px; }
+    label {
+      font-size: 11px;
+      font-weight: 800;
+      color: var(--text-muted);
+      text-transform: uppercase;
+      letter-spacing: 0.6px;
+      display: block;
+      margin-bottom: 5px;
+    }
+    input, select, textarea {
+      width: 100%;
+      min-height: 42px;
+      padding: 9px 12px;
+      border: 1px solid var(--border);
+      border-radius: 10px;
+      font-family: inherit;
+      font-size: 14px;
+      background: #fff;
+      color: var(--text);
+      outline: none;
+      transition: border-color 0.15s ease, box-shadow 0.15s ease;
+    }
+    input:hover:not(:focus), select:hover:not(:focus), textarea:hover:not(:focus) { border-color: #cbd5e1; }
+    input:focus, select:focus, textarea:focus {
+      border-color: var(--accent);
+      box-shadow: 0 0 0 3px rgba(16, 185, 129, 0.16);
+    }
+    textarea { resize: vertical; min-height: 68px; }
+
+    /* ===== CHECKBOX SOLAT ===== */
+    .solat-grid {
+      display: grid;
+      grid-template-columns: repeat(auto-fit, minmax(108px, 1fr));
+      gap: 9px;
+      margin-top: 4px;
+    }
+    .solat-item {
+      position: relative;
+      border: 1.5px solid var(--border);
+      border-radius: 12px;
+      padding: 13px 10px;
+      text-align: center;
+      cursor: pointer;
+      background: #fff;
+      transition: all 0.16s ease;
+      user-select: none;
+    }
+    .solat-item:hover { border-color: var(--accent); }
+    .solat-item:focus-within { outline: 2px solid var(--accent); outline-offset: 2px; }
+    .solat-item input { position: absolute; opacity: 0; pointer-events: none; }
+    .solat-label {
+      font-size: 12.5px;
+      font-weight: 800;
+      color: var(--text);
+      display: block;
+      letter-spacing: -0.1px;
+    }
+    .solat-mark {
+      display: block;
+      font-size: 17px;
+      margin-top: 4px;
+      color: #cbd5e1;
+      transition: color 0.16s ease, transform 0.16s ease;
+      font-weight: 800;
+      line-height: 1;
+    }
+    .solat-item.done {
+      background: var(--ok-bg);
+      border-color: var(--accent);
+      box-shadow: 0 4px 14px -8px rgba(5, 150, 105, 0.5);
+    }
+    .solat-item.done .solat-label { color: #065f46; }
+    .solat-item.done .solat-mark { color: var(--ok); transform: scale(1.12); }
+    .solat-item.lewat {
+      background: var(--warn-bg);
+      border-color: #fcd34d;
+    }
+
+    .progress-wrap {
+      margin-top: 14px;
+      display: flex;
+      align-items: center;
+      gap: 12px;
+    }
+    .progress-bar {
+      flex: 1;
+      height: 9px;
+      background: #e2e8f0;
+      border-radius: 999px;
+      overflow: hidden;
+    }
+    .progress-fill {
+      height: 100%;
+      width: 0%;
+      background: linear-gradient(90deg, #34d399, #059669);
+      border-radius: 999px;
+      transition: width 0.35s cubic-bezier(0.16, 1, 0.3, 1);
+    }
+    .progress-text {
+      font-size: 12.5px;
+      font-weight: 800;
+      color: var(--primary);
+      white-space: nowrap;
+      font-variant-numeric: tabular-nums;
+    }
+
+    /* ===== BUTANG ===== */
+    .btn {
+      display: inline-flex;
+      align-items: center;
+      justify-content: center;
+      gap: 6px;
+      font-family: inherit;
+      font-size: 13.5px;
+      font-weight: 700;
+      padding: 10px 17px;
+      min-height: 42px;
+      border-radius: 11px;
+      border: 1px solid transparent;
+      cursor: pointer;
+      transition: all 0.15s ease;
+      white-space: nowrap;
+    }
+    .btn:active { transform: scale(0.975); }
+    .btn:focus-visible { outline: 2px solid var(--primary); outline-offset: 2px; }
+    .btn-primary {
+      background: linear-gradient(180deg, #12604b 0%, var(--primary) 100%);
+      color: #fff;
+      box-shadow: 0 1px 2px rgba(13, 74, 58, 0.3), 0 6px 16px -8px rgba(13, 74, 58, 0.5);
+    }
+    .btn-primary:hover { background: linear-gradient(180deg, #0f5240 0%, var(--primary-hover) 100%); }
+    .btn-secondary { background: #fff; border-color: var(--border); color: var(--text); }
+    .btn-secondary:hover { background: #f8fafc; border-color: #cbd5e1; }
+    .btn-danger { background: #fee2e2; color: #991b1b; border-color: #fecaca; }
+    .btn-block { width: 100%; }
+    .btn:disabled { opacity: 0.55; cursor: not-allowed; }
+
+    .btn-row { display: flex; gap: 9px; flex-wrap: wrap; margin-top: 16px; }
+
+    /* ===== STATISTIK ===== */
+    .stat-grid {
+      display: grid;
+      grid-template-columns: repeat(auto-fit, minmax(120px, 1fr));
+      gap: 11px;
+    }
+    .stat-box {
+      background: #fff;
+      border: 1px solid var(--border);
+      border-radius: 13px;
+      padding: 14px 15px;
+      position: relative;
+      overflow: hidden;
+    }
+    .stat-box::after {
+      content: '';
+      position: absolute;
+      left: 15px; right: 15px; bottom: 0;
+      height: 3px;
+      border-radius: 3px 3px 0 0;
+      background: linear-gradient(90deg, #34d399, #0d4a3a);
+    }
+    .stat-title {
+      font-size: 10px;
+      font-weight: 800;
+      color: var(--text-muted);
+      text-transform: uppercase;
+      letter-spacing: 0.7px;
+    }
+    .stat-val {
+      font-size: 25px;
+      font-weight: 800;
+      color: var(--text);
+      margin: 6px 0 2px;
+      letter-spacing: -0.6px;
+      line-height: 1.1;
+      font-variant-numeric: tabular-nums;
+    }
+    .stat-sub { font-size: 11.5px; color: var(--text-muted); font-weight: 500; }
+
+    /* ===== JADUAL ===== */
+    .table-wrap { overflow-x: auto; }
+    table { width: 100%; border-collapse: collapse; font-size: 13px; }
+    th {
+      background: linear-gradient(180deg, #f8fafc 0%, #f1f5f9 100%);
+      color: #475569;
+      font-weight: 800;
+      font-size: 10.5px;
+      text-transform: uppercase;
+      letter-spacing: 0.6px;
+      padding: 11px 12px;
+      border-bottom: 1px solid var(--border);
+      white-space: nowrap;
+      text-align: center;
+    }
+    th:first-child, td:first-child { text-align: left; }
+    td {
+      padding: 11px 12px;
+      border-bottom: 1px solid var(--border-light);
+      text-align: center;
+      vertical-align: middle;
+    }
+    tbody tr { transition: background 0.12s ease; }
+    tbody tr:hover { background: #f8fafc; }
+    .tick { color: var(--ok); font-weight: 800; font-size: 15px; }
+    .cross { color: #cbd5e1; font-size: 15px; }
+    .date-cell { font-weight: 700; white-space: nowrap; font-size: 12.5px; }
+
+    .empty-state {
+      text-align: center;
+      padding: 34px 20px;
+      color: var(--text-muted);
+      font-size: 13px;
+    }
+    .empty-state svg {
+      width: 40px; height: 40px;
+      stroke: #cbd5e1;
+      fill: none;
+      stroke-width: 1.6;
+      margin-bottom: 10px;
+    }
+
+    /* ===== TOAST ===== */
+    .toast {
+      position: fixed;
+      bottom: 24px;
+      left: 50%;
+      transform: translate(-50%, 100px);
+      padding: 12px 20px;
+      background: var(--text);
+      color: #fff;
+      border-radius: 11px;
+      font-weight: 700;
+      font-size: 13px;
+      opacity: 0;
+      transition: all 0.25s ease;
+      z-index: var(--z-toast);
+      max-width: calc(100vw - 32px);
+      box-shadow: 0 10px 28px -8px rgba(15, 23, 42, 0.4);
+    }
+    .toast.show { transform: translate(-50%, 0); opacity: 1; }
+    .toast.error { background: #b91c1c; }
+
+    /* ===== LOADING ===== */
+    .loading-overlay {
+      position: fixed;
+      inset: 0;
+      background: rgba(246, 248, 247, 0.88);
+      backdrop-filter: blur(4px);
+      display: grid;
+      place-items: center;
+      z-index: var(--z-loading);
+    }
+    .spinner {
+      width: 36px; height: 36px;
+      border: 3px solid var(--border);
+      border-top-color: var(--accent);
+      border-radius: 50%;
+      animation: spin 0.8s linear infinite;
+    }
+    .loading-box { text-align: center; }
+    .loading-box p { font-size: 13px; font-weight: 700; color: var(--primary); margin-top: 12px; }
+
+    /* ===== MODAL ===== */
+    .modal-overlay {
+      position: fixed;
+      inset: 0;
+      background: rgba(15, 23, 42, 0.75);
+      backdrop-filter: blur(5px);
+      display: grid;
+      place-items: center;
+      z-index: var(--z-modal);
+      padding: 16px;
+      overflow-y: auto;
+    }
+    .modal-dialog {
+      background: #fff;
+      border-radius: 16px;
+      width: 100%;
+      max-width: 460px;
+      max-height: 88vh;
+      display: flex;
+      flex-direction: column;
+      overflow: hidden;
+      box-shadow: 0 24px 48px -12px rgba(0, 0, 0, 0.35);
+      margin: auto;
+    }
+    .modal-header {
+      padding: 15px 18px;
+      border-bottom: 1px solid var(--border);
+      display: flex;
+      justify-content: space-between;
+      align-items: center;
+      background: #fafafa;
+      flex-shrink: 0;
+    }
+    .modal-header h3 { font-size: 15px; font-weight: 800; }
+    .modal-body { padding: 18px; overflow-y: auto; flex: 1; }
+
+    /* ===== KALENDAR HABA ===== */
+    .heatmap-wrap { overflow-x: auto; padding-bottom: 8px; }
+    .heatmap-months {
+      display: grid;
+      grid-auto-flow: column;
+      gap: 3px;
+      margin-bottom: 5px;
+      font-size: 9.5px;
+      color: var(--text-muted);
+      font-weight: 700;
+    }
+    .heatmap-grid {
+      display: grid;
+      grid-template-rows: repeat(7, 12px);
+      grid-auto-flow: column;
+      grid-auto-columns: 12px;
+      gap: 3px;
+    }
+    .heatmap-cell {
+      width: 12px;
+      height: 12px;
+      border-radius: 3px;
+      background: #ebedf0;
+      transition: transform 0.12s ease;
+      cursor: pointer;
+    }
+    .heatmap-cell:hover { transform: scale(1.35); outline: 1px solid var(--primary); }
+    .heatmap-cell:focus-visible { outline: 2px solid var(--primary); outline-offset: 1px; }
+    .heatmap-cell.l1 { background: #bbf7d0; }
+    .heatmap-cell.l2 { background: #6ee7b7; }
+    .heatmap-cell.l3 { background: #34d399; }
+    .heatmap-cell.l4 { background: #10b981; }
+    .heatmap-cell.l5 { background: #047857; }
+    .heatmap-cell.future { background: transparent; cursor: default; }
+    .heatmap-cell.today { box-shadow: 0 0 0 1.5px var(--primary); }
+    .heatmap-legend {
+      display: flex;
+      align-items: center;
+      gap: 6px;
+      font-size: 10.5px;
+      color: var(--text-muted);
+      margin-top: 10px;
+      font-weight: 600;
+      flex-wrap: wrap;
+    }
+    .heatmap-legend .heatmap-cell { cursor: default; }
+    .heatmap-legend .heatmap-cell:hover { transform: none; outline: none; }
+
+    /* ===== QADA ===== */
+    .qada-hutang {
+      font-size: 34px;
+      font-weight: 800;
+      color: var(--warn);
+      letter-spacing: -1px;
+      line-height: 1;
+      font-variant-numeric: tabular-nums;
+    }
+    .qada-baris {
+      display: grid;
+      grid-template-columns: repeat(auto-fit, minmax(88px, 1fr));
+      gap: 8px;
+      margin-top: 14px;
+    }
+    .qada-item {
+      border: 1px solid var(--border);
+      border-radius: 10px;
+      padding: 9px 10px;
+      text-align: center;
+      background: #fff;
+    }
+    .qada-item .qn { font-size: 10px; font-weight: 800; color: var(--text-muted); text-transform: uppercase; letter-spacing: 0.5px; }
+    .qada-item .qv { font-size: 17px; font-weight: 800; margin-top: 3px; color: var(--text); font-variant-numeric: tabular-nums; }
+    .qada-item .qv.lebih { color: var(--ok); }
+
+    .qada-log { margin-top: 16px; border-top: 1px dashed var(--border); padding-top: 14px; }
+    .qada-log-row {
+      display: flex;
+      justify-content: space-between;
+      align-items: center;
+      gap: 10px;
+      padding: 8px 0;
+      border-bottom: 1px solid var(--border-light);
+      font-size: 12.5px;
+    }
+    .qada-log-row:last-child { border-bottom: none; }
+    .qada-tag {
+      font-size: 10px;
+      font-weight: 800;
+      padding: 2px 7px;
+      border-radius: 5px;
+      text-transform: uppercase;
+      letter-spacing: 0.4px;
+    }
+    .qada-tag.hutang { background: var(--warn-bg); color: var(--warn); }
+    .qada-tag.lunas { background: var(--ok-bg); color: var(--ok); }
+
+    /* ===== JEMA AH TOGGLE ===== */
+    .jemaah-toggle {
+      margin-top: 11px;
+      display: flex;
+      align-items: center;
+      gap: 9px;
+      padding: 10px 13px;
+      border: 1px solid var(--border);
+      border-radius: 11px;
+      background: #f8fafc;
+      cursor: pointer;
+      transition: all 0.15s ease;
+    }
+    .jemaah-toggle:hover { border-color: var(--accent); background: #f0fdf9; }
+    .jemaah-toggle input {
+      width: 17px; height: 17px;
+      accent-color: var(--accent);
+      cursor: pointer;
+      flex-shrink: 0;
+      min-height: auto;
+      padding: 0;
+    }
+    .jemaah-toggle-text { font-size: 12.5px; font-weight: 700; color: var(--text); }
+    .jemaah-toggle-sub { font-size: 11px; color: var(--text-muted); font-weight: 500; display: block; margin-top: 1px; }
+
+    .jemaah-marks {
+      display: flex;
+      gap: 3px;
+      justify-content: center;
+      margin-top: 3px;
+      min-height: 12px;
+    }
+    .jemaah-dot {
+      width: 6px;
+      height: 6px;
+      border-radius: 50%;
+      background: var(--accent);
+    }
+
+    .badge-info {
+      display: inline-flex;
+      align-items: center;
+      gap: 5px;
+      font-size: 10.5px;
+      font-weight: 800;
+      padding: 3px 9px;
+      border-radius: 20px;
+      background: var(--primary-soft);
+      color: var(--primary);
+      border: 1px solid #a7f3d0;
+    }
+    .badge-info.warn {
+      background: var(--warn-bg);
+      color: var(--warn);
+      border-color: #fcd34d;
+    }
+    .bottom-nav {
+      position: fixed;
+      bottom: 0; left: 0; right: 0;
+      background: #fff;
+      border-top: 1px solid var(--border);
+      display: grid;
+      grid-template-columns: repeat(4, 1fr);
+      padding: 6px 6px max(6px, env(safe-area-inset-bottom));
+      z-index: var(--z-fab);
+      box-shadow: 0 -4px 16px rgba(15, 23, 42, 0.07);
+      max-width: 900px;
+      margin: 0 auto;
+    }
+    .nav-btn {
+      border: none;
+      background: transparent;
+      color: var(--text-muted);
+      font-family: inherit;
+      font-size: 10.5px;
+      font-weight: 700;
+      display: flex;
+      flex-direction: column;
+      align-items: center;
+      justify-content: center;
+      gap: 3px;
+      padding: 8px 4px;
+      border-radius: 11px;
+      cursor: pointer;
+      transition: color 0.15s ease, background 0.15s ease;
+    }
+    .nav-btn svg { width: 20px; height: 20px; fill: none; stroke: currentColor; stroke-width: 2.2; stroke-linecap: round; stroke-linejoin: round; }
+    .nav-btn.active { color: var(--primary); background: var(--primary-soft); }
+    .nav-btn.active svg { stroke: var(--accent); }
+
+    @media (min-width: 720px) {
+      .prayer-strip { grid-template-columns: repeat(6, 1fr); }
+      .app-header { padding: 26px 28px 30px; }
+      main { padding: 22px 20px 0; }
+    }
+
+    @media (max-width: 380px) {
+      .prayer-time { font-size: 11.5px; }
+      .prayer-name { font-size: 9px; }
+      .stat-val { font-size: 21px; }
+    }
+  </style>
+</head>
+<body>
+
+  <!-- HEADER -->
+  <header class="app-header">
+    <div class="header-top">
+      <div style="min-width:0;">
+        <div class="header-title">
+          <svg viewBox="0 0 24 24" style="width:22px;height:22px;fill:none;stroke:#6ee7b7;stroke-width:2;stroke-linecap:round;stroke-linejoin:round;flex-shrink:0;"><path d="M12 2v4M12 18v4M4.93 4.93l2.83 2.83M16.24 16.24l2.83 2.83M2 12h4M18 12h4M4.93 19.07l2.83-2.83M16.24 7.76l2.83-2.83"></path></svg>
+          Rekod Solat
+        </div>
+        <div class="header-sub" id="headerSub">Memuatkan waktu solat...</div>
+        <div class="header-zon" id="headerZon">
+          <svg viewBox="0 0 24 24"><path d="M21 10c0 7-9 13-9 13s-9-6-9-13a9 9 0 0 1 18 0z"></path><circle cx="12" cy="10" r="3"></circle></svg>
+          <span id="headerZonText">—</span>
+        </div>
+      </div>
+      <div class="header-actions">
+        <button type="button" class="icon-btn" id="btnRefresh" onclick="refreshAll()" aria-label="Segar semula">
+          <svg viewBox="0 0 24 24"><path d="M21.5 2v6h-6M21.34 15.57a10 10 0 1 1-.57-8.38l5.67-5.67"></path></svg>
+        </button>
+        <button type="button" class="icon-btn" onclick="openSettings()" aria-label="Tetapan">
+          <svg viewBox="0 0 24 24"><circle cx="12" cy="12" r="3"></circle><path d="M19.4 15a1.65 1.65 0 0 0 .33 1.82l.06.06a2 2 0 0 1-2.83 2.83l-.06-.06a1.65 1.65 0 0 0-1.82-.33 1.65 1.65 0 0 0-1 1.51V21a2 2 0 0 1-4 0v-.09A1.65 1.65 0 0 0 9 19.4a1.65 1.65 0 0 0-1.82.33l-.06.06a2 2 0 0 1-2.83-2.83l.06-.06a1.65 1.65 0 0 0 .33-1.82 1.65 1.65 0 0 0-1.51-1H3a2 2 0 0 1 0-4h.09A1.65 1.65 0 0 0 4.6 9a1.65 1.65 0 0 0-.33-1.82l-.06-.06a2 2 0 0 1 2.83-2.83l.06.06A1.65 1.65 0 0 0 9 4.6a1.65 1.65 0 0 0 1-1.51V3a2 2 0 0 1 4 0v.09a1.65 1.65 0 0 0 1 1.51 1.65 1.65 0 0 0 1.82-.33l.06-.06a2 2 0 0 1 2.83 2.83l-.06.06a1.65 1.65 0 0 0-.33 1.82V9a1.65 1.65 0 0 0 1.51 1H21a2 2 0 0 1 0 4h-.09a1.65 1.65 0 0 0-1.51 1z"></path></svg>
+        </button>
+      </div>
+    </div>
+
+    <div class="prayer-zon-label"><span id="prayerZonLabel">Waktu Solat</span></div>
+    <div class="prayer-strip" id="prayerStrip"></div>
+    <div class="countdown" id="countdown"></div>
+  </header>
+
+  <main>
+
+    <!-- TAB: REKOD HARI INI -->
+    <section id="tab-rekod">
+      <div class="card">
+        <div class="card-header">
+          <h2>Rekod Hari Ini</h2>
+        </div>
+        <div class="card-body">
+          <div class="picker-row">
+            <div class="field">
+              <label for="selPengguna">Pengguna</label>
+              <select id="selPengguna" onchange="onPenggunaChange()"></select>
+            </div>
+            <div class="field">
+              <label for="inpTarikh">Tarikh</label>
+              <input type="date" id="inpTarikh" onchange="onTarikhChange()">
+            </div>
+          </div>
+
+          <div style="margin-top:18px;">
+            <label>Solat Fardhu</label>
+            <div class="solat-grid" id="solatGrid"></div>
+            <div class="progress-wrap">
+              <div class="progress-bar"><div class="progress-fill" id="progressFill"></div></div>
+              <div class="progress-text" id="progressText">0 / 5</div>
+            </div>
+          </div>
+
+          <label class="jemaah-toggle" for="chkJemaah">
+            <input type="checkbox" id="chkJemaah" onchange="onJemaahModeChange()">
+            <span>
+              <span class="jemaah-toggle-text">Solat Berjemaah</span>
+              <span class="jemaah-toggle-sub">Tanda yang mana solat dilakukan berjemaah di masjid/surau</span>
+            </span>
+          </label>
+
+          <div style="margin-top:18px;">
+            <label for="inpSunat">Solat Sunat (pilihan)</label>
+            <input type="text" id="inpSunat" placeholder="cth: Dhuha, Tahajud, Witir, Rawatib" maxlength="200">
+          </div>
+
+          <div style="margin-top:14px;">
+            <label for="inpQada">Solat Qada (pilihan)</label>
+            <input type="text" id="inpQada" placeholder="cth: Subuh 2 hari lalu, Zohor" maxlength="200">
+          </div>
+
+          <div style="margin-top:14px;">
+            <label for="inpNota">Nota (pilihan)</label>
+            <textarea id="inpNota" placeholder="cth: Solat di masjid, berjemaah" maxlength="500"></textarea>
+          </div>
+
+          <div class="btn-row">
+            <button type="button" class="btn btn-primary btn-block" id="btnSimpan" onclick="simpanRekod()">
+              Simpan Rekod
+            </button>
+          </div>
+        </div>
+      </div>
+    </section>
+
+    <!-- TAB: STATISTIK -->
+    <section id="tab-statistik" class="hidden">
+      <div class="card">
+        <div class="card-header">
+          <h2>Statistik</h2>
+          <div style="display:flex;gap:8px;">
+            <button type="button" class="btn btn-secondary" style="padding:6px 12px;min-height:34px;font-size:12px;" onclick="setJulat(7)">7 hari</button>
+            <button type="button" class="btn btn-secondary" style="padding:6px 12px;min-height:34px;font-size:12px;" onclick="setJulat(30)">30 hari</button>
+            <button type="button" class="btn btn-secondary" style="padding:6px 12px;min-height:34px;font-size:12px;" onclick="setJulat(90)">90 hari</button>
+          </div>
+        </div>
+        <div class="card-body">
+          <div class="stat-grid" id="statGrid"></div>
+        </div>
+      </div>
+
+      <div class="card">
+        <div class="card-header">
+          <h2>Pecahan Solat</h2>
+        </div>
+        <div class="card-body">
+          <div id="pecahanWrap"></div>
+        </div>
+      </div>
+
+      <div class="card">
+        <div class="card-header">
+          <h2>Kalendar Haba</h2>
+          <div style="display:flex;gap:8px;">
+            <button type="button" class="btn btn-secondary" style="padding:6px 12px;min-height:34px;font-size:12px;" onclick="loadKalendar(90)">90 hari</button>
+            <button type="button" class="btn btn-secondary" style="padding:6px 12px;min-height:34px;font-size:12px;" onclick="loadKalendar(365)">1 tahun</button>
+          </div>
+        </div>
+        <div class="card-body">
+          <div class="heatmap-wrap">
+            <div class="heatmap-months" id="heatmapMonths"></div>
+            <div class="heatmap-grid" id="heatmapGrid"></div>
+          </div>
+          <div class="heatmap-legend">
+            <span>Kurang</span>
+            <span class="heatmap-cell"></span>
+            <span class="heatmap-cell l1"></span>
+            <span class="heatmap-cell l2"></span>
+            <span class="heatmap-cell l3"></span>
+            <span class="heatmap-cell l4"></span>
+            <span class="heatmap-cell l5"></span>
+            <span>Penuh</span>
+          </div>
+          <div style="font-size:11.5px;color:var(--text-muted);margin-top:10px;" id="heatmapInfo"></div>
+        </div>
+      </div>
+    </section>
+
+    <!-- TAB: QADA -->
+    <section id="tab-qada" class="hidden">
+      <div class="card">
+        <div class="card-header">
+          <h2>Penjejak Qada</h2>
+          <span class="badge-info" id="qadaBadge">—</span>
+        </div>
+        <div class="card-body">
+          <div style="display:flex;align-items:flex-end;justify-content:space-between;gap:14px;flex-wrap:wrap;">
+            <div>
+              <div style="font-size:11px;font-weight:800;color:var(--text-muted);text-transform:uppercase;letter-spacing:0.6px;">Baki Hutang Qada</div>
+              <div class="qada-hutang" id="qadaBaki">0</div>
+              <div style="font-size:11.5px;color:var(--text-muted);margin-top:3px;">
+                Hutang <strong id="qadaHutang">0</strong> · Lunas <strong id="qadaLunas">0</strong>
+              </div>
+            </div>
+            <div style="display:flex;gap:8px;flex-wrap:wrap;">
+              <button type="button" class="btn btn-secondary" style="padding:8px 14px;min-height:38px;font-size:12.5px;" onclick="bukaCatatQada('hutang')">+ Hutang</button>
+              <button type="button" class="btn btn-primary" style="padding:8px 14px;min-height:38px;font-size:12.5px;" onclick="bukaCatatQada('lunas')">− Lunas</button>
+            </div>
+          </div>
+
+          <div class="qada-baris" id="qadaPerSolat"></div>
+
+          <div class="qada-log">
+            <label>Catatan Terkini</label>
+            <div id="qadaLog"></div>
+          </div>
+        </div>
+      </div>
+    </section>
+
+    <!-- TAB: SEJARAH -->
+    <section id="tab-sejarah" class="hidden">
+      <div class="card">
+        <div class="card-header">
+          <h2>Sejarah Rekod</h2>
+          <div style="display:flex;gap:8px;align-items:center;">
+            <select id="selHari" onchange="loadSejarah()" style="min-height:34px;padding:5px 10px;font-size:12.5px;width:auto;">
+              <option value="7">7 hari</option>
+              <option value="30" selected>30 hari</option>
+              <option value="90">90 hari</option>
+              <option value="365">1 tahun</option>
+            </select>
+          </div>
+        </div>
+        <div class="card-body" style="padding:0;">
+          <div class="table-wrap">
+            <table>
+              <thead>
+                <tr>
+                  <th>Tarikh</th>
+                  <th>Subuh</th>
+                  <th>Zohor</th>
+                  <th>Asar</th>
+                  <th>Maghrib</th>
+                  <th>Isyak</th>
+                  <th>Sunat</th>
+                  <th>Qada</th>
+                </tr>
+              </thead>
+              <tbody id="sejarahBody"></tbody>
+            </table>
+          </div>
+          <div id="sejarahEmpty" class="empty-state hidden">
+            <svg viewBox="0 0 24 24"><rect x="3" y="4" width="18" height="18" rx="2"></rect><line x1="16" y1="2" x2="16" y2="6"></line><line x1="8" y1="2" x2="8" y2="6"></line><line x1="3" y1="10" x2="21" y2="10"></line></svg>
+            <div>Tiada rekod dalam tempoh ini.</div>
+          </div>
+        </div>
+      </div>
+    </section>
+
+  </main>
+
+  <!-- NAV BAWAH -->
+  <nav class="bottom-nav">
+    <button type="button" class="nav-btn active" id="navRekod" onclick="switchTab('rekod')">
+      <svg viewBox="0 0 24 24"><path d="M9 11l3 3L22 4"></path><path d="M21 12v7a2 2 0 0 1-2 2H5a2 2 0 0 1-2-2V5a2 2 0 0 1 2-2h11"></path></svg>
+      Rekod
+    </button>
+    <button type="button" class="nav-btn" id="navStatistik" onclick="switchTab('statistik')">
+      <svg viewBox="0 0 24 24"><line x1="18" y1="20" x2="18" y2="10"></line><line x1="12" y1="20" x2="12" y2="4"></line><line x1="6" y1="20" x2="6" y2="14"></line></svg>
+      Statistik
+    </button>
+    <button type="button" class="nav-btn" id="navQada" onclick="switchTab('qada')">
+      <svg viewBox="0 0 24 24"><path d="M3 12a9 9 0 1 0 9-9 9.75 9.75 0 0 0-6.74 2.74L3 8"></path><path d="M3 3v5h5"></path><path d="M12 7v5l4 2"></path></svg>
+      Qada
+    </button>
+    <button type="button" class="nav-btn" id="navSejarah" onclick="switchTab('sejarah')">
+      <svg viewBox="0 0 24 24"><circle cx="12" cy="12" r="10"></circle><polyline points="12 6 12 12 16 14"></polyline></svg>
+      Sejarah
+    </button>
+  </nav>
+
+  <!-- MODAL TETAPAN -->
+  <div id="settingsModal" class="modal-overlay hidden" role="dialog" aria-modal="true" aria-labelledby="settingsTitle">
+    <div class="modal-dialog">
+      <div class="modal-header">
+        <h3 id="settingsTitle">Tetapan</h3>
+        <button type="button" class="btn btn-secondary" style="padding:5px 11px;min-height:30px;font-size:12px;" onclick="closeSettings()">Tutup</button>
+      </div>
+      <div class="modal-body">
+        <div class="field" style="margin-bottom:14px;">
+          <label for="setNama">Nama Anda</label>
+          <input type="text" id="setNama" maxlength="60" placeholder="Nama">
+        </div>
+        <div class="field" style="margin-bottom:6px;">
+          <label for="setZon">Zon Waktu Solat JAKIM</label>
+          <select id="setZon" onchange="paparkanZonDipilih('setZon','zonInfo1')"></select>
+          <div id="zonInfo1" style="font-size:11.5px;color:var(--primary);font-weight:700;margin-top:6px;display:flex;gap:5px;align-items:flex-start;">
+            <svg viewBox="0 0 24 24" style="width:13px;height:13px;fill:none;stroke:currentColor;stroke-width:2.2;flex-shrink:0;margin-top:2px;"><path d="M21 10c0 7-9 13-9 13s-9-6-9-13a9 9 0 0 1 18 0z"></path><circle cx="12" cy="10" r="3"></circle></svg>
+            <span>—</span>
+          </div>
+        </div>
+
+        <div id="pasanganWrap" style="border-top:1px dashed var(--border);padding-top:16px;margin-top:16px;">
+          <label style="margin-bottom:10px;">Pengguna Kedua (Pasangan)</label>
+          <div class="field" style="margin-bottom:12px;">
+            <label for="setNama2" style="text-transform:none;font-size:11.5px;">Nama</label>
+            <input type="text" id="setNama2" maxlength="60" placeholder="Nama pasangan">
+          </div>
+          <div class="field" style="margin-bottom:6px;">
+            <label for="setZon2" style="text-transform:none;font-size:11.5px;">Zon JAKIM</label>
+            <select id="setZon2" onchange="paparkanZonDipilih('setZon2','zonInfo2')"></select>
+            <div id="zonInfo2" style="font-size:11.5px;color:var(--primary);font-weight:700;margin-top:6px;display:flex;gap:5px;align-items:flex-start;">
+              <svg viewBox="0 0 24 24" style="width:13px;height:13px;fill:none;stroke:currentColor;stroke-width:2.2;flex-shrink:0;margin-top:2px;"><path d="M21 10c0 7-9 13-9 13s-9-6-9-13a9 9 0 0 1 18 0z"></path><circle cx="12" cy="10" r="3"></circle></svg>
+              <span>—</span>
+            </div>
+          </div>
+        </div>
+
+        <div id="telegramInfo" class="hidden" style="margin-top:16px;padding:12px 13px;background:#f0fdf9;border:1px solid #a7f3d0;border-radius:11px;">
+          <div style="font-size:11.5px;font-weight:800;color:var(--primary);margin-bottom:5px;">Notifikasi Telegram</div>
+          <div id="telegramInfoText" style="font-size:11.5px;color:var(--text-muted);line-height:1.55;"></div>
+        </div>
+
+        <div class="btn-row">
+          <button type="button" class="btn btn-primary btn-block" onclick="simpanTetapan()">Simpan Tetapan</button>
+        </div>
+      </div>
+    </div>
+  </div>
+
+  <!-- MODAL CATAT QADA -->
+  <div id="qadaModal" class="modal-overlay hidden" role="dialog" aria-modal="true" aria-labelledby="qadaModalTitle">
+    <div class="modal-dialog" style="max-width:420px;">
+      <div class="modal-header">
+        <h3 id="qadaModalTitle">Catat Qada</h3>
+        <button type="button" class="btn btn-secondary" style="padding:5px 11px;min-height:30px;font-size:12px;" onclick="closeQadaModal()">Tutup</button>
+      </div>
+      <div class="modal-body">
+        <input type="hidden" id="qadaJenis">
+        <div class="field" style="margin-bottom:14px;">
+          <label for="qadaSolat">Jenis Solat</label>
+          <select id="qadaSolat">
+            <option value="">Semua / Umum</option>
+            <option value="subuh">Subuh</option>
+            <option value="zohor">Zohor</option>
+            <option value="asar">Asar</option>
+            <option value="maghrib">Maghrib</option>
+            <option value="isyak">Isyak</option>
+          </select>
+        </div>
+        <div class="field" style="margin-bottom:14px;">
+          <label for="qadaBilangan">Bilangan</label>
+          <input type="number" id="qadaBilangan" min="1" max="1000" value="1">
+        </div>
+        <div class="field" style="margin-bottom:14px;">
+          <label for="qadaTarikh">Tarikh</label>
+          <input type="date" id="qadaTarikh">
+        </div>
+        <div class="field">
+          <label for="qadaNota">Nota (pilihan)</label>
+          <input type="text" id="qadaNota" maxlength="300" placeholder="cth: tinggal semasa sakit">
+        </div>
+        <div class="btn-row">
+          <button type="button" class="btn btn-primary btn-block" id="qadaSubmitBtn" onclick="simpanQada()">Simpan</button>
+        </div>
+      </div>
+    </div>
+  </div>
+
+  <!-- LOADING -->
+  <div id="loading" class="loading-overlay hidden">
+    <div class="loading-box">
+      <div class="spinner" style="margin:0 auto;"></div>
+      <p id="loadingMsg">Memproses...</p>
+    </div>
+  </div>
+
+  <div id="toast" class="toast" role="status" aria-live="polite">Notifikasi</div>
+
+  <script>
+    const SCRIPT_URL = ''; // <-- Tampal URL /exec Apps Script di sini
+    const API_TOKEN = '';  // <-- Tampal SHARED_TOKEN (jika digunakan)
+
+    const SOLAT_WAJIB = ['subuh', 'zohor', 'asar', 'maghrib', 'isyak'];
+    const NAMA_SOLAT = { subuh: 'Subuh', zohor: 'Zohor', asar: 'Asar', maghrib: 'Maghrib', isyak: 'Isyak' };
+
+    /**
+     * Daftar zon JAKIM — 60 zon, semua disahkan dengan API e-solat.gov.my.
+     * Kod -> { negeri, kawasan }
+     */
+    const ZON_JAKIM = {
+      'JHR01': { negeri: 'Johor', kawasan: 'Pulau Aur dan Pulau Pemanggil' },
+      'JHR02': { negeri: 'Johor', kawasan: 'Kota Tinggi, Mersing, Johor Bahru' },
+      'JHR03': { negeri: 'Johor', kawasan: 'Kluang, Pontian' },
+      'JHR04': { negeri: 'Johor', kawasan: 'Batu Pahat, Muar, Segamat, Gemas' },
+      'KDH01': { negeri: 'Kedah', kawasan: 'Kota Setar, Kubang Pasu, Pokok Sena' },
+      'KDH02': { negeri: 'Kedah', kawasan: 'Kuala Muda, Yan, Pendang' },
+      'KDH03': { negeri: 'Kedah', kawasan: 'Padang Terap, Sik' },
+      'KDH04': { negeri: 'Kedah', kawasan: 'Baling' },
+      'KDH05': { negeri: 'Kedah', kawasan: 'Bandar Baharu, Kulim' },
+      'KDH06': { negeri: 'Kedah', kawasan: 'Langkawi' },
+      'KDH07': { negeri: 'Kedah', kawasan: 'Puncak Gunung Jerai' },
+      'KTN01': { negeri: 'Kelantan', kawasan: 'Kota Bharu, Bachok, Pasir Puteh, Tumpat' },
+      'KTN02': { negeri: 'Kelantan', kawasan: 'Pasir Mas, Tanah Merah, Machang, Kuala Krai' },
+      'MLK01': { negeri: 'Melaka', kawasan: 'Seluruh negeri Melaka' },
+      'NGS01': { negeri: 'Negeri Sembilan', kawasan: 'Jelebu, Kuala Pilah, Jempol, Tampin' },
+      'NGS02': { negeri: 'Negeri Sembilan', kawasan: 'Seremban, Port Dickson, Rembau' },
+      'NGS03': { negeri: 'Negeri Sembilan', kawasan: 'Gemas' },
+      'PHG01': { negeri: 'Pahang', kawasan: 'Pulau Tioman' },
+      'PHG02': { negeri: 'Pahang', kawasan: 'Kuantan, Pekan, Rompin' },
+      'PHG03': { negeri: 'Pahang', kawasan: 'Kuala Lipis, Jerantut, Temerloh, Maran' },
+      'PHG04': { negeri: 'Pahang', kawasan: 'Bentong, Raub, Cameron Highlands' },
+      'PHG05': { negeri: 'Pahang', kawasan: 'Genting, Bukit Tinggi' },
+      'PHG06': { negeri: 'Pahang', kawasan: 'Mukim Ulu Tembeling' },
+      'PHG07': { negeri: 'Pahang', kawasan: 'Mukim Kuala Tahan' },
+      'PNG01': { negeri: 'Pulau Pinang', kawasan: 'Seluruh negeri Pulau Pinang' },
+      'PRK01': { negeri: 'Perak', kawasan: 'Tapah, Slim River, Tanjung Malim' },
+      'PRK02': { negeri: 'Perak', kawasan: 'Kuala Kangsar, Ipoh, Kampar, Batu Gajah' },
+      'PRK03': { negeri: 'Perak', kawasan: 'Pengkalan Hulu, Grik, Lenggong' },
+      'PRK04': { negeri: 'Perak', kawasan: 'Temengor, Belum' },
+      'PRK05': { negeri: 'Perak', kawasan: 'Taiping, Kuala Sepetang, Selama' },
+      'PRK06': { negeri: 'Perak', kawasan: 'Teluk Intan, Bidor, Hutan Melintang' },
+      'PRK07': { negeri: 'Perak', kawasan: 'Parit, Lumut, Sitiawan, Pulau Pangkor' },
+      'PLS01': { negeri: 'Perlis', kawasan: 'Seluruh negeri Perlis' },
+      'SBH01': { negeri: 'Sabah', kawasan: 'Sandakan, Bukit Garam, Semawang' },
+      'SBH02': { negeri: 'Sabah', kawasan: 'Kota Kinabalu, Ranau, Kota Belud' },
+      'SBH03': { negeri: 'Sabah', kawasan: 'Lahad Datu, Kunak, Semporna' },
+      'SBH04': { negeri: 'Sabah', kawasan: 'Tawau' },
+      'SBH05': { negeri: 'Sabah', kawasan: 'Kudat, Kota Marudu, Pitas' },
+      'SBH06': { negeri: 'Sabah', kawasan: 'Keningau, Tambunan, Tenom, Nabawan' },
+      'SBH07': { negeri: 'Sabah', kawasan: 'Beaufort, Sipitang, Kuala Penyu' },
+      'SBH08': { negeri: 'Sabah', kawasan: 'Papar, Putatan' },
+      'SBH09': { negeri: 'Sabah', kawasan: 'Bandar Sri Aman' },
+      'SWK01': { negeri: 'Sarawak', kawasan: 'Limbang, Sundar, Trusan' },
+      'SWK02': { negeri: 'Sarawak', kawasan: 'Miri, Marudi, Niah, Suai' },
+      'SWK03': { negeri: 'Sarawak', kawasan: 'Bintulu, Sebauh, Tatau' },
+      'SWK04': { negeri: 'Sarawak', kawasan: 'Sibu, Kanowit, Selangau' },
+      'SWK05': { negeri: 'Sarawak', kawasan: 'Kapit, Song, Belaga' },
+      'SWK06': { negeri: 'Sarawak', kawasan: 'Serian, Simunjan, Sri Aman' },
+      'SWK07': { negeri: 'Sarawak', kawasan: 'Kuching, Bau, Lundu' },
+      'SWK08': { negeri: 'Sarawak', kawasan: 'Kota Samarahan, Asajaya' },
+      'SWK09': { negeri: 'Sarawak', kawasan: 'Mukah, Dalat, Daro, Matu' },
+      'SGR01': { negeri: 'Selangor', kawasan: 'Gombak, Petaling, Sepang, Hulu Langat' },
+      'SGR02': { negeri: 'Selangor', kawasan: 'Kuala Selangor, Sabak Bernam, Hulu Selangor' },
+      'SGR03': { negeri: 'Selangor', kawasan: 'Klang, Kuala Langat' },
+      'TRG01': { negeri: 'Terengganu', kawasan: 'Kuala Terengganu, Marang, Kuala Nerus' },
+      'TRG02': { negeri: 'Terengganu', kawasan: 'Besut, Setiu' },
+      'TRG03': { negeri: 'Terengganu', kawasan: 'Hulu Terengganu' },
+      'TRG04': { negeri: 'Terengganu', kawasan: 'Dungun, Kemaman' },
+      'WLY01': { negeri: 'W.P. Kuala Lumpur', kawasan: 'Kuala Lumpur, Putrajaya' },
+      'WLY02': { negeri: 'W.P. Labuan', kawasan: 'Labuan' }
+    };
+
+    /** Nama penuh zon: "Kuala Terengganu, Marang, Kuala Nerus, Terengganu" */
+    function namaZon(kod) {
+      const z = ZON_JAKIM[String(kod || '').trim().toUpperCase()];
+      return z ? (z.kawasan + ', ' + z.negeri) : String(kod || '');
+    }
+
+    const appState = {
+      config: { pengguna: [], zonTersedia: [], solatWajib: SOLAT_WAJIB },
+      rekodSemasa: null,
+      rekodHariIni: {},
+      waktuSolat: null,
+      aktifTab: 'rekod',
+      penggunaAktif: null,
+      tarikhAktif: null,
+      qada: null,
+      kalendarHari: 365,
+      jemaahSementara: {}
+    };
+
+    let countdownTimer = null;
+    let toastTimer = null;
+
+    /* ==========================================================================
+       UTILITI
+       ========================================================================== */
+
+    function esc(v) {
+      if (v === null || v === undefined) return '';
+      return String(v)
+        .replace(/&/g, '&amp;').replace(/</g, '&lt;').replace(/>/g, '&gt;')
+        .replace(/"/g, '&quot;').replace(/'/g, '&#39;');
+    }
+
+    function safeUrl(v) {
+      if (!v) return '';
+      const s = String(v).trim();
+      return /^https?:\/\//i.test(s) ? esc(s) : '';
+    }
+
+    function withToken(url) {
+      if (!API_TOKEN) return url;
+      const sep = url.indexOf('?') === -1 ? '?' : '&';
+      return url + sep + 'token=' + encodeURIComponent(API_TOKEN);
+    }
+
+    function apiHeaders() { return { 'Content-Type': 'text/plain;charset=utf-8' }; }
+
+    function apiBody(payload) {
+      const body = Object.assign({}, payload);
+      if (API_TOKEN) body.token = API_TOKEN;
+      return JSON.stringify(body);
+    }
+
+    function showToast(msg, isError) {
+      const t = document.getElementById('toast');
+      t.textContent = msg;
+      t.classList.toggle('error', !!isError);
+      t.classList.add('show');
+      if (toastTimer) clearTimeout(toastTimer);
+      toastTimer = setTimeout(() => t.classList.remove('show'), 3200);
+    }
+
+    function showLoading(on, msg) {
+      const el = document.getElementById('loading');
+      if (!on) { el.classList.add('hidden'); return; }
+      document.getElementById('loadingMsg').textContent = msg || 'Memproses...';
+      el.classList.remove('hidden');
+    }
+
+    function todayStr() {
+      const d = new Date();
+      return d.getFullYear() + '-' +
+        String(d.getMonth() + 1).padStart(2, '0') + '-' +
+        String(d.getDate()).padStart(2, '0');
+    }
+
+    function addDays(dateStr, n) {
+      const p = dateStr.split('-');
+      const d = new Date(Number(p[0]), Number(p[1]) - 1, Number(p[2]));
+      d.setDate(d.getDate() + n);
+      return d.getFullYear() + '-' +
+        String(d.getMonth() + 1).padStart(2, '0') + '-' +
+        String(d.getDate()).padStart(2, '0');
+    }
+
+    function formatTarikhPapar(dateStr) {
+      const hari = ['Ahad', 'Isnin', 'Selasa', 'Rabu', 'Khamis', 'Jumaat', 'Sabtu'];
+      const bulan = ['Jan', 'Feb', 'Mac', 'Apr', 'Mei', 'Jun', 'Jul', 'Ogos', 'Sep', 'Okt', 'Nov', 'Dis'];
+      const p = dateStr.split('-');
+      const d = new Date(Number(p[0]), Number(p[1]) - 1, Number(p[2]));
+      return hari[d.getDay()] + ', ' + Number(p[2]) + ' ' + bulan[Number(p[1]) - 1] + ' ' + p[0];
+    }
+
+    /** Tukar "HH:MM:SS" kepada minit sejak tengah malam. */
+    function masaKeMinit(hhmmss) {
+      if (!hhmmss) return null;
+      const p = String(hhmmss).split(':');
+      return Number(p[0]) * 60 + Number(p[1]);
+    }
+
+    function minitKeJam(minit) {
+      const h = Math.floor(minit / 60);
+      const m = Math.floor(minit % 60);
+      const s = Math.floor((minit * 60) % 60);
+      return String(h).padStart(2, '0') + ':' + String(m).padStart(2, '0') + ':' + String(s).padStart(2, '0');
+    }
+
+    /* ==========================================================================
+       API
+       ========================================================================== */
+
+    async function apiGet(action, params) {
+      if (!SCRIPT_URL) throw new Error('SCRIPT_URL belum ditetapkan.');
+      let url = SCRIPT_URL + '?action=' + encodeURIComponent(action);
+      if (params) {
+        Object.keys(params).forEach(k => {
+          if (params[k] !== undefined && params[k] !== null && params[k] !== '') {
+            url += '&' + encodeURIComponent(k) + '=' + encodeURIComponent(params[k]);
+          }
+        });
+      }
+      const res = await fetch(withToken(url), { method: 'GET', redirect: 'follow' });
+      return res.json();
+    }
+
+    async function apiPost(action, data) {
+      if (!SCRIPT_URL) throw new Error('SCRIPT_URL belum ditetapkan.');
+      const res = await fetch(withToken(SCRIPT_URL), {
+        method: 'POST',
+        headers: apiHeaders(),
+        body: apiBody({ action: action, data: data })
+      });
+      return res.json();
+    }
+
+    /* ==========================================================================
+       INIT
+       ========================================================================== */
+
+    document.addEventListener('DOMContentLoaded', async () => {
+      const inpTarikh = document.getElementById('inpTarikh');
+      inpTarikh.value = todayStr();
+      appState.tarikhAktif = todayStr();
+
+      binaGridSolat();
+      initDelegatedEvents();
+
+      if (!SCRIPT_URL) {
+        showToast('SCRIPT_URL belum ditetapkan. Sila isi dalam index.html.', true);
+        document.getElementById('headerSub').textContent = 'Belum dikonfigurasi';
+        return;
+      }
+
+      await muatConfig();
+      await muatSemua();
+      startCountdown();
+      registerServiceWorker();
+    });
+
+    async function muatConfig() {
+      try {
+        const res = await apiGet('getConfig');
+        if (!res.ok) throw new Error(res.message);
+        appState.config = res;
+
+        const sel = document.getElementById('selPengguna');
+        sel.innerHTML = (res.pengguna || []).map(p =>
+          '<option value="' + esc(p.id) + '">' + esc(p.nama) + '</option>'
+        ).join('');
+
+        // Dropdown zon — kumpul ikut negeri, tunjuk nama kawasan
+        const negeriSet = {};
+        (res.zonTersedia || []).forEach(z => {
+          const kod = (typeof z === 'string') ? z : z.kod;
+          if (!negeriSet[kod.slice(0, 3)]) negeriSet[kod.slice(0, 3)] = [];
+          negeriSet[kod.slice(0, 3)].push(kod);
+        });
+
+        const optZon = (list) => list.map(kod => {
+          const info = ZON_JAKIM[kod];
+          const teks = info ? (kod + ' — ' + info.kawasan) : kod;
+          return '<option value="' + esc(kod) + '">' + esc(teks) + '</option>';
+        }).join('');
+
+        let grupOpts = '';
+        Object.keys(negeriSet).sort().forEach(pref => {
+          const kod = negeriSet[pref][0];
+          const info = ZON_JAKIM[kod];
+          const namaNegeri = info ? info.negeri : pref;
+          grupOpts += '<optgroup label="' + esc(namaNegeri) + '">' + optZon(negeriSet[pref]) + '</optgroup>';
+        });
+
+        const z1 = document.getElementById('setZon');
+        const z2 = document.getElementById('setZon2');
+        z1.innerHTML = grupOpts;
+        z2.innerHTML = grupOpts;
+
+        if (!appState.penggunaAktif && res.pengguna && res.pengguna.length) {
+          appState.penggunaAktif = res.pengguna[0].id;
+          sel.value = appState.penggunaAktif;
+        } else if (appState.penggunaAktif) {
+          sel.value = appState.penggunaAktif;
+        }
+
+        isiBorangTetapan();
+      } catch (err) {
+        showToast('Gagal memuat konfigurasi: ' + err.message, true);
+      }
+    }
+
+    async function muatSemua() {
+      await Promise.all([muatWaktuSolat(), muatRekodHari()]);
+    }
+
+    function getPenggunaObj() {
+      return (appState.config.pengguna || []).find(p => p.id === appState.penggunaAktif) || null;
+    }
+
+    async function muatWaktuSolat() {
+      try {
+        const p = getPenggunaObj();
+        const zon = p ? p.zon : 'TRG01';
+        const res = await apiGet('prayerTimes', { zone: zon });
+        if (!res.ok) throw new Error(res.message);
+        appState.waktuSolat = res.data;
+        renderWaktuSolat();
+      } catch (err) {
+        document.getElementById('headerSub').textContent = 'Waktu solat tidak tersedia';
+      }
+    }
+
+    async function muatRekodHari() {
+      try {
+        const res = await apiGet('getRekod', {
+          pengguna: appState.penggunaAktif,
+          dari: appState.tarikhAktif,
+          hingga: appState.tarikhAktif
+        });
+        if (!res.ok) throw new Error(res.message);
+        const rekod = (res.data && res.data.length) ? res.data[0] : null;
+        appState.rekodSemasa = rekod;
+        appState.jemaahSementara = rekod && rekod.jemaah ? Object.assign({}, rekod.jemaah) : {};
+        isiBorangRekod(rekod);
+      } catch (err) {
+        showToast('Gagal memuat rekod: ' + err.message, true);
+      }
+    }
+
+    /* ==========================================================================
+       RENDER WAKTU SOLAT
+       ========================================================================== */
+
+    function renderWaktuSolat() {
+      const ws = appState.waktuSolat;
+      if (!ws) return;
+
+      const p = getPenggunaObj();
+      document.getElementById('headerSub').textContent = formatTarikhPapar(todayStr());
+
+      // Nama zon penuh, bukan kod sahaja
+      const nama = (p && p.namaZon) ? p.namaZon : namaZon(ws.zone);
+      document.getElementById('headerZonText').textContent = nama;
+      document.getElementById('headerZon').title = 'Zon ' + ws.zone + ' — ' + nama;
+      document.getElementById('prayerZonLabel').textContent = 'Waktu Solat — Zon ' + ws.zone;
+
+      // Hijri
+      if (ws.hijri) {
+        const hp = String(ws.hijri).split('-');
+        const bulanHijri = ['Muharram','Safar','Rabiulawal','Rabiulakhir','Jamadilawal','Jamadilakhir',
+          'Rejab','Syaaban','Ramadan','Syawal','Zulkaedah','Zulhijjah'];
+        const b = Number(hp[1]) - 1;
+        if (b >= 0 && b < 12) {
+          document.getElementById('prayerZonLabel').textContent +=
+            ' · ' + Number(hp[2]) + ' ' + bulanHijri[b] + ' ' + hp[0] + 'H';
+        }
+      }
+
+      const senarai = [
+        { nama: 'Subuh', masa: ws.subuh },
+        { nama: 'Syuruk', masa: ws.syuruk },
+        { nama: 'Zohor', masa: ws.zohor },
+        { nama: 'Asar', masa: ws.asar },
+        { nama: 'Maghrib', masa: ws.maghrib },
+        { nama: 'Isyak', masa: ws.isyak }
+      ];
+
+      const sekarangMinit = new Date().getHours() * 60 + new Date().getMinutes();
+
+      let nextIdx = -1;
+      for (let i = 0; i < senarai.length; i++) {
+        const m = masaKeMinit(senarai[i].masa);
+        if (m !== null && m > sekarangMinit) { nextIdx = i; break; }
+      }
+
+      document.getElementById('prayerStrip').innerHTML = senarai.map((s, i) => {
+        const m = masaKeMinit(s.masa);
+        let cls = 'prayer-chip';
+        if (i === nextIdx) cls += ' next';
+        else if (m !== null && m <= sekarangMinit) cls += ' past';
+        return '<div class="' + cls + '">' +
+          '<div class="prayer-name">' + esc(s.nama) + '</div>' +
+          '<div class="prayer-time">' + esc(s.masa ? s.masa.slice(0, 5) : '--:--') + '</div>' +
+          '</div>';
+      }).join('');
+    }
+
+    function startCountdown() {
+      if (countdownTimer) clearInterval(countdownTimer);
+      const tick = () => {
+        const ws = appState.waktuSolat;
+        const el = document.getElementById('countdown');
+        if (!ws) { el.textContent = ''; return; }
+
+        const susunan = [
+          { nama: 'Subuh', masa: ws.subuh },
+          { nama: 'Zohor', masa: ws.zohor },
+          { nama: 'Asar', masa: ws.asar },
+          { nama: 'Maghrib', masa: ws.maghrib },
+          { nama: 'Isyak', masa: ws.isyak }
+        ];
+
+        const now = new Date();
+        const sekarangSaat = now.getHours() * 3600 + now.getMinutes() * 60 + now.getSeconds();
+
+        let target = null;
+        for (let i = 0; i < susunan.length; i++) {
+          const m = masaKeMinit(susunan[i].masa);
+          if (m !== null && m * 60 > sekarangSaat) { target = { nama: susunan[i].nama, saat: m * 60 }; break; }
+        }
+
+        if (!target) {
+          const m = masaKeMinit(susunan[0].masa);
+          if (m !== null) target = { nama: 'Subuh (esok)', saat: m * 60 + 86400 };
+        }
+
+        if (!target) { el.textContent = ''; return; }
+
+        const baki = target.saat - sekarangSaat;
+        el.innerHTML = 'Seterusnya <strong>' + esc(target.nama) + '</strong> dalam <strong>' +
+          minitKeJam(baki / 60) + '</strong>';
+      };
+      tick();
+      countdownTimer = setInterval(tick, 1000);
+    }
+
+    /* ==========================================================================
+       BORANG REKOD
+       ========================================================================== */
+
+    function binaGridSolat() {
+      document.getElementById('solatGrid').innerHTML = SOLAT_WAJIB.map(k =>
+        '<label class="solat-item" id="item-' + k + '">' +
+          '<input type="checkbox" id="chk-' + k + '" onchange="onSolatChange()">' +
+          '<span class="solat-label">' + esc(NAMA_SOLAT[k]) + '</span>' +
+          '<span class="solat-mark" id="mark-' + k + '">○</span>' +
+          '<span class="jemaah-marks" id="jmk-' + k + '"></span>' +
+        '</label>'
+      ).join('');
+    }
+
+    function isiBorangRekod(rekod) {
+      SOLAT_WAJIB.forEach(k => {
+        const chk = document.getElementById('chk-' + k);
+        if (chk) chk.checked = !!(rekod && rekod[k]);
+      });
+      document.getElementById('inpSunat').value = rekod ? (rekod.sunat || '') : '';
+      document.getElementById('inpQada').value = rekod ? (rekod.qada || '') : '';
+      document.getElementById('inpNota').value = rekod ? (rekod.nota || '') : '';
+
+      const jemaah = (rekod && rekod.jemaah) ? rekod.jemaah : {};
+      const adaJemaah = SOLAT_WAJIB.some(k => jemaah[k]);
+      document.getElementById('chkJemaah').checked = adaJemaah;
+
+      kemaskiniPaparanSolat();
+    }
+
+    function onJemaahModeChange() {
+      const on = document.getElementById('chkJemaah').checked;
+      if (!on) {
+        // Buang semua tanda jemaah bila dimatikan
+        SOLAT_WAJIB.forEach(k => {
+          delete appState.jemaahSementara[k];
+        });
+        kemaskiniPaparanSolat();
+        return;
+      }
+      // Bila dihidupkan, tanda semua solat yang sudah ditanda sebagai berjemaah
+      SOLAT_WAJIB.forEach(k => {
+        if (document.getElementById('chk-' + k).checked) appState.jemaahSementara[k] = true;
+      });
+      kemaskiniPaparanSolat();
+    }
+
+    function toggleJemaahSolat(k) {
+      if (!document.getElementById('chk-' + k).checked) return;
+      if (appState.jemaahSementara[k]) delete appState.jemaahSementara[k];
+      else appState.jemaahSementara[k] = true;
+      kemaskiniPaparanSolat();
+    }
+
+    function onSolatChange() {
+      kemaskiniPaparanSolat();
+    }
+
+    function kemaskiniPaparanSolat() {
+      let kira = 0;
+      const tarikhIni = appState.tarikhAktif === todayStr();
+      const sekarangMinit = new Date().getHours() * 60 + new Date().getMinutes();
+      const modJemaah = document.getElementById('chkJemaah').checked;
+
+      SOLAT_WAJIB.forEach(k => {
+        const chk = document.getElementById('chk-' + k);
+        const item = document.getElementById('item-' + k);
+        const mark = document.getElementById('mark-' + k);
+        const jmk = document.getElementById('jmk-' + k);
+        if (!chk || !item) return;
+
+        const done = chk.checked;
+        if (done) kira++;
+
+        item.classList.toggle('done', done);
+        item.style.cursor = (modJemaah && done) ? 'pointer' : '';
+
+        let lewat = false;
+        if (tarikhIni && !done && appState.waktuSolat) {
+          const m = masaKeMinit(appState.waktuSolat[k]);
+          if (m !== null && sekarangMinit > m) lewat = true;
+        }
+        item.classList.toggle('lewat', lewat);
+
+        if (mark) mark.textContent = done ? '✓' : '○';
+
+        if (jmk) {
+          const j = done && appState.jemaahSementara[k];
+          jmk.innerHTML = j ? '<span class="jemaah-dot"></span>' : '';
+        }
+
+        if (item._handler) item.removeEventListener('click', item._handler);
+        if (modJemaah && done) {
+          const h = (ev) => {
+            if (ev.target.tagName === 'INPUT') return;
+            ev.preventDefault();
+            toggleJemaahSolat(k);
+          };
+          item._handler = h;
+          item.addEventListener('click', h);
+        }
+      });
+
+      const pct = (kira / SOLAT_WAJIB.length) * 100;
+      document.getElementById('progressFill').style.width = pct + '%';
+      document.getElementById('progressText').textContent = kira + ' / ' + SOLAT_WAJIB.length;
+    }
+
+    async function simpanRekod() {
+      const btn = document.getElementById('btnSimpan');
+      btn.disabled = true;
+      showLoading(true, 'Menyimpan rekod...');
+
+      try {
+        const data = {
+          tarikh: appState.tarikhAktif,
+          pengguna: appState.penggunaAktif,
+          sunat: document.getElementById('inpSunat').value,
+          qada: document.getElementById('inpQada').value,
+          nota: document.getElementById('inpNota').value,
+          jemaah: {}
+        };
+        SOLAT_WAJIB.forEach(k => {
+          const chk = document.getElementById('chk-' + k).checked;
+          data[k] = chk;
+          if (chk && appState.jemaahSementara[k]) data.jemaah[k] = true;
+        });
+
+        const res = await apiPost('simpanRekod', data);
+        if (!res.ok) throw new Error(res.message);
+
+        showToast('Rekod disimpan.');
+        appState.rekodSemasa = data;
+      } catch (err) {
+        showToast('Gagal menyimpan: ' + err.message, true);
+      } finally {
+        showLoading(false);
+        btn.disabled = false;
+      }
+    }
+
+    function onPenggunaChange() {
+      appState.penggunaAktif = document.getElementById('selPengguna').value;
+      isiBorangTetapan();
+      muatSemua();
+    }
+
+    function onTarikhChange() {
+      appState.tarikhAktif = document.getElementById('inpTarikh').value || todayStr();
+      appState.jemaahSementara = {};
+      muatRekodHari();
+    }
+
+    /* ==========================================================================
+       STATISTIK
+       ========================================================================== */
+
+    let julatHari = 30;
+
+    function setJulat(n) {
+      julatHari = n;
+      loadStatistik();
+    }
+
+    async function loadStatistik() {
+      try {
+        const hingga = todayStr();
+        const dari = addDays(hingga, -(julatHari - 1));
+        const res = await apiGet('getStatistik', {
+          pengguna: appState.penggunaAktif, dari: dari, hingga: hingga
+        });
+        if (!res.ok) throw new Error(res.message);
+        renderStatistik(res.data);
+      } catch (err) {
+        showToast('Gagal memuat statistik: ' + err.message, true);
+      }
+    }
+
+    function renderStatistik(s) {
+      const boxes = [
+        { t: 'Peratus', v: s.peratus + '%', sub: 'solat dilaksanakan' },
+        { t: 'Hari Penuh', v: s.hariPenuh, sub: 'daripada ' + s.hariPenuh + '/' + s.jumlahHari + ' hari' },
+        { t: 'Streak Semasa', v: s.streakSemasa, sub: 'hari berturut-turut' },
+        { t: 'Streak Terbaik', v: s.streakTerbaik, sub: 'rekod tertinggi' }
+      ];
+
+      document.getElementById('statGrid').innerHTML = boxes.map(b =>
+        '<div class="stat-box">' +
+          '<div class="stat-title">' + esc(b.t) + '</div>' +
+          '<div class="stat-val">' + esc(b.v) + '</div>' +
+          '<div class="stat-sub">' + esc(b.sub) + '</div>' +
+        '</div>'
+      ).join('');
+
+      const pecahan = s.pecahan || {};
+      document.getElementById('pecahanWrap').innerHTML = SOLAT_WAJIB.map(k => {
+        const bil = pecahan[k] || 0;
+        const pct = s.jumlahHari > 0 ? Math.round((bil / s.jumlahHari) * 100) : 0;
+        return '<div style="margin-bottom:13px;">' +
+          '<div style="display:flex;justify-content:space-between;font-size:12.5px;font-weight:700;margin-bottom:5px;">' +
+            '<span>' + esc(NAMA_SOLAT[k]) + '</span>' +
+            '<span style="color:var(--text-muted);">' + bil + ' / ' + s.jumlahHari + ' (' + pct + '%)</span>' +
+          '</div>' +
+          '<div class="progress-bar"><div class="progress-fill" style="width:' + pct + '%"></div></div>' +
+        '</div>';
+      }).join('');
+    }
+
+    /* ==========================================================================
+       QADA
+       ========================================================================== */
+
+    async function loadQada() {
+      try {
+        const res = await apiGet('getQada', { pengguna: appState.penggunaAktif });
+        if (!res.ok) throw new Error(res.message);
+        appState.qada = res.data;
+        renderQada(res.data);
+      } catch (err) {
+        showToast('Gagal memuat qada: ' + err.message, true);
+      }
+    }
+
+    function renderQada(q) {
+      document.getElementById('qadaBaki').textContent = q.baki;
+      document.getElementById('qadaHutang').textContent = q.hutang;
+      document.getElementById('qadaLunas').textContent = q.lunas;
+
+      const badge = document.getElementById('qadaBadge');
+      badge.textContent = q.baki > 0 ? (q.baki + ' perlu diqada') : 'Tiada hutang';
+      badge.classList.toggle('warn', q.baki > 0);
+
+      const ikut = q.ikutSolat || {};
+      document.getElementById('qadaPerSolat').innerHTML = SOLAT_WAJIB.map(k => {
+        const s = ikut[k] || { hutang: 0, lunas: 0 };
+        const baki = Math.max(0, s.hutang - s.lunas);
+        return '<div class="qada-item">' +
+          '<div class="qn">' + esc(NAMA_SOLAT[k]) + '</div>' +
+          '<div class="qv' + (baki === 0 && s.hutang > 0 ? ' lebih' : '') + '">' + baki + '</div>' +
+        '</div>';
+      }).join('');
+
+      const log = document.getElementById('qadaLog');
+      if (!q.catatan || !q.catatan.length) {
+        log.innerHTML = '<div style="font-size:12.5px;color:var(--text-muted);padding:10px 0;">Belum ada catatan qada.</div>';
+        return;
+      }
+
+      log.innerHTML = q.catatan.slice(0, 20).map(c => {
+        const jenis = c.jenis === 'hutang' ? 'hutang' : 'lunas';
+        const tanda = c.jenis === 'hutang' ? '+' : '−';
+        return '<div class="qada-log-row">' +
+          '<div style="display:flex;align-items:center;gap:8px;min-width:0;">' +
+            '<span class="qada-tag ' + jenis + '">' + esc(jenis) + '</span>' +
+            '<span style="font-weight:700;">' + tanda + c.bilangan + '</span>' +
+            (c.solat ? '<span style="font-size:11px;color:var(--text-muted);">' + esc(NAMA_SOLAT[c.solat] || c.solat) + '</span>' : '') +
+            (c.nota ? '<span style="font-size:11px;color:var(--text-muted);overflow:hidden;text-overflow:ellipsis;white-space:nowrap;">' + esc(c.nota) + '</span>' : '') +
+          '</div>' +
+          '<span style="font-size:11px;color:var(--text-muted);white-space:nowrap;">' + esc(c.tarikh) + '</span>' +
+        '</div>';
+      }).join('');
+    }
+
+    function bukaCatatQada(jenis) {
+      document.getElementById('qadaJenis').value = jenis;
+      document.getElementById('qadaModalTitle').textContent = jenis === 'hutang' ? 'Catat Hutang Qada' : 'Catat Qada Dilunaskan';
+      document.getElementById('qadaSubmitBtn').textContent = jenis === 'hutang' ? 'Tambah Hutang' : 'Tanda Lunas';
+      document.getElementById('qadaBilangan').value = 1;
+      document.getElementById('qadaNota').value = '';
+      document.getElementById('qadaSolat').value = '';
+      document.getElementById('qadaTarikh').value = todayStr();
+      openModal('qadaModal');
+    }
+
+    function closeQadaModal() { closeModal('qadaModal'); }
+
+    async function simpanQada() {
+      const jenis = document.getElementById('qadaJenis').value;
+      const bilangan = Number(document.getElementById('qadaBilangan').value);
+      if (!bilangan || bilangan < 1) { showToast('Bilangan mesti sekurang-kurangnya 1.', true); return; }
+
+      showLoading(true, 'Menyimpan catatan qada...');
+      try {
+        const res = await apiPost('catatQada', {
+          tarikh: document.getElementById('qadaTarikh').value || todayStr(),
+          pengguna: appState.penggunaAktif,
+          jenis: jenis,
+          bilangan: bilangan,
+          solat: document.getElementById('qadaSolat').value,
+          nota: document.getElementById('qadaNota').value
+        });
+        if (!res.ok) throw new Error(res.message);
+        closeQadaModal();
+        appState.qada = res.ringkasan;
+        renderQada(res.ringkasan);
+        showToast('Catatan qada disimpan.');
+      } catch (err) {
+        showToast('Gagal menyimpan: ' + err.message, true);
+      } finally {
+        showLoading(false);
+      }
+    }
+
+    /* ==========================================================================
+       KALENDAR HABA
+       ========================================================================== */
+
+    async function loadKalendar(hari) {
+      if (hari) appState.kalendarHari = hari;
+      try {
+        const res = await apiGet('getKalendar', { pengguna: appState.penggunaAktif, hari: appState.kalendarHari });
+        if (!res.ok) throw new Error(res.message);
+        renderKalendar(res.data);
+      } catch (err) {
+        showToast('Gagal memuat kalendar: ' + err.message, true);
+      }
+    }
+
+    function renderKalendar(data) {
+      const sel = data.sel || [];
+      const grid = document.getElementById('heatmapGrid');
+      const monthsEl = document.getElementById('heatmapMonths');
+
+      // Susun grid: lajur = minggu, baris = hari dalam minggu (Ahad..Sabtu)
+      const pertama = sel.length ? sel[0].tarikh : null;
+      if (!pertama) { grid.innerHTML = ''; monthsEl.innerHTML = ''; return; }
+
+      const p = pertama.split('-');
+      const d0 = new Date(Number(p[0]), Number(p[1]) - 1, Number(p[2]));
+      const offsetHari = d0.getDay(); // 0 = Ahad
+
+      const selGrid = [];
+      for (let i = 0; i < offsetHari; i++) selGrid.push(null);
+      sel.forEach(s => selGrid.push(s));
+
+      const bilMinggu = Math.ceil(selGrid.length / 7);
+      const namaBulan = ['Jan', 'Feb', 'Mac', 'Apr', 'Mei', 'Jun', 'Jul', 'Ogos', 'Sep', 'Okt', 'Nov', 'Dis'];
+
+      // Label bulan
+      let labelBulan = '';
+      let bulanTerakhir = -1;
+      for (let w = 0; w < bilMinggu; w++) {
+        const idx = w * 7;
+        const s = selGrid[idx];
+        if (s) {
+          const bp = s.tarikh.split('-');
+          const b = Number(bp[1]) - 1;
+          if (b !== bulanTerakhir) {
+            labelBulan += '<span style="grid-column:' + (w + 1) + ';white-space:nowrap;">' + namaBulan[b] + '</span>';
+            bulanTerakhir = b;
+          }
+        }
+      }
+      monthsEl.style.gridTemplateColumns = 'repeat(' + bilMinggu + ', 12px)';
+      monthsEl.innerHTML = labelBulan;
+
+      const hariIniStr = todayStr();
+      let jumlahPenuh = 0, jumlahRekod = 0;
+
+      grid.innerHTML = selGrid.map(s => {
+        if (!s) return '<div class="heatmap-cell future"></div>';
+        let cls = 'heatmap-cell';
+        if (s.bil > 0) cls += ' l' + Math.min(5, s.bil);
+        if (s.tarikh === hariIniStr) cls += ' today';
+        if (s.bil === 5) jumlahPenuh++;
+        if (s.rekod) jumlahRekod++;
+        const tajuk = formatTarikhPapar(s.tarikh) + ' — ' + s.bil + '/5 solat' +
+          (s.jemaah ? ', ' + s.jemaah + ' berjemaah' : '');
+        return '<div class="' + cls + '" title="' + esc(tajuk) + '" data-tarikh="' + esc(s.tarikh) + '" tabindex="0" role="img" aria-label="' + esc(tajuk) + '"></div>';
+      }).join('');
+
+      const jumlahHari = sel.length;
+      document.getElementById('heatmapInfo').innerHTML =
+        'Dalam ' + jumlahHari + ' hari: <strong>' + jumlahPenuh + '</strong> hari penuh, ' +
+        '<strong>' + jumlahRekod + '</strong> hari ada rekod.';
+
+      // Klik sel untuk buka tarikh itu
+      grid.querySelectorAll('.heatmap-cell[data-tarikh]').forEach(cell => {
+        const buka = () => {
+          const t = cell.getAttribute('data-tarikh');
+          appState.tarikhAktif = t;
+          document.getElementById('inpTarikh').value = t;
+          switchTab('rekod');
+          muatRekodHari();
+        };
+        cell.addEventListener('click', buka);
+        cell.addEventListener('keydown', e => {
+          if (e.key === 'Enter' || e.key === ' ') { e.preventDefault(); buka(); }
+        });
+      });
+    }
+
+    /* ==========================================================================
+       SEJARAH
+       ========================================================================== */
+
+    async function loadSejarah() {
+      const n = Number(document.getElementById('selHari').value) || 30;
+      const tbody = document.getElementById('sejarahBody');
+      const empty = document.getElementById('sejarahEmpty');
+
+      tbody.innerHTML = '<tr><td colspan="8" style="padding:20px;text-align:center;">' +
+        '<span class="skeleton" style="height:12px;width:70%;"></span></td></tr>';
+
+      try {
+        const hingga = todayStr();
+        const dari = addDays(hingga, -(n - 1));
+        const res = await apiGet('getRekod', {
+          pengguna: appState.penggunaAktif, dari: dari, hingga: hingga
+        });
+        if (!res.ok) throw new Error(res.message);
+
+        const data = (res.data || []).slice().reverse();
+        if (!data.length) {
+          tbody.innerHTML = '';
+          empty.classList.remove('hidden');
+          return;
+        }
+        empty.classList.add('hidden');
+
+        tbody.innerHTML = data.map(r =>
+          '<tr>' +
+            '<td class="date-cell">' + esc(formatTarikhPapar(r.tarikh)) + '</td>' +
+            SOLAT_WAJIB.map(k =>
+              '<td>' + (r[k] ? '<span class="tick">✓</span>' : '<span class="cross">—</span>') + '</td>'
+            ).join('') +
+            '<td style="font-size:11.5px;color:var(--text-muted);">' + esc(r.sunat || '—') + '</td>' +
+            '<td style="font-size:11.5px;color:var(--text-muted);">' + esc(r.qada || '—') + '</td>' +
+          '</tr>'
+        ).join('');
+      } catch (err) {
+        tbody.innerHTML = '<tr><td colspan="8" style="padding:20px;text-align:center;color:#dc2626;">Gagal memuat: ' + esc(err.message) + '</td></tr>';
+      }
+    }
+
+    /* ==========================================================================
+       TABS
+       ========================================================================== */
+
+    function switchTab(tab) {
+      appState.aktifTab = tab;
+      ['rekod', 'statistik', 'qada', 'sejarah'].forEach(t => {
+        document.getElementById('tab-' + t).classList.toggle('hidden', t !== tab);
+        document.getElementById('nav' + t.charAt(0).toUpperCase() + t.slice(1)).classList.toggle('active', t === tab);
+      });
+
+      if (tab === 'statistik') { loadStatistik(); loadKalendar(); }
+      if (tab === 'qada') loadQada();
+      if (tab === 'sejarah') loadSejarah();
+      window.scrollTo({ top: 0, behavior: 'smooth' });
+    }
+
+    /* ==========================================================================
+       TETAPAN
+       ========================================================================== */
+
+    function isiBorangTetapan() {
+      const pengguna = appState.config.pengguna || [];
+      const p1 = pengguna[0] || {};
+      const p2 = pengguna[1] || {};
+      document.getElementById('setNama').value = p1.nama || '';
+      document.getElementById('setZon').value = p1.zon || 'TRG01';
+      document.getElementById('setNama2').value = p2.nama || '';
+      document.getElementById('setZon2').value = p2.zon || 'TRG01';
+
+      paparkanZonDipilih('setZon', 'zonInfo1');
+      paparkanZonDipilih('setZon2', 'zonInfo2');
+
+      // Info Telegram
+      const infoEl = document.getElementById('telegramInfo');
+      const textEl = document.getElementById('telegramInfoText');
+      if (appState.config.telegramAktif) {
+        infoEl.classList.remove('hidden');
+        const ada = pengguna.filter(p => p.adaTelegram).map(p => p.nama);
+        textEl.textContent = ada.length
+          ? 'Aktif untuk: ' + ada.join(', ') + '. Untuk pautkan pengguna lain, hantar /start kepada bot dan tampal Chat ID dalam sheet Pengguna.'
+          : 'Belum ada pengguna dipautkan. Hantar /start kepada bot anda, kemudian tampal Chat ID dalam sheet Pengguna → kolum Telegram Chat ID.';
+      } else {
+        infoEl.classList.add('hidden');
+      }
+    }
+
+    /** Papar nama kawasan untuk zon yang dipilih. */
+    function paparkanZonDipilih(selectId, infoId) {
+      const el = document.getElementById(selectId);
+      const info = document.getElementById(infoId);
+      if (!el || !info) return;
+      const kod = el.value;
+      const z = ZON_JAKIM[kod];
+      const span = info.querySelector('span');
+      if (span) span.textContent = z ? (z.kawasan + ' · ' + z.negeri) : kod;
+    }
+
+    function openSettings() {
+      isiBorangTetapan();
+      openModal('settingsModal');
+    }
+    function closeSettings() { closeModal('settingsModal'); }
+
+    async function simpanTetapan() {
+      const nama1 = document.getElementById('setNama').value.trim();
+      const zon1 = document.getElementById('setZon').value;
+      const nama2 = document.getElementById('setNama2').value.trim();
+      const zon2 = document.getElementById('setZon2').value;
+
+      if (!nama1) { showToast('Nama anda diperlukan.', true); return; }
+
+      showLoading(true, 'Menyimpan tetapan...');
+      try {
+        let res = await apiPost('simpanPengguna', { id: 'saya', nama: nama1, zon: zon1 });
+        if (!res.ok) throw new Error(res.message);
+
+        if (nama2) {
+          res = await apiPost('simpanPengguna', { id: 'pasangan', nama: nama2, zon: zon2 });
+          if (!res.ok) throw new Error(res.message);
+        }
+
+        await muatConfig();
+        await muatSemua();
+        closeSettings();
+        showToast('Tetapan disimpan.');
+      } catch (err) {
+        showToast('Gagal menyimpan tetapan: ' + err.message, true);
+      } finally {
+        showLoading(false);
+      }
+    }
+
+    /* ==========================================================================
+       MODAL & EVENT
+       ========================================================================== */
+
+    let lastFocused = null;
+    let savedScrollY = 0;
+
+    function openModal(id) {
+      const m = document.getElementById(id);
+      if (!m) return;
+      lastFocused = document.activeElement;
+      savedScrollY = window.scrollY || 0;
+      m.classList.remove('hidden');
+      document.body.classList.add('modal-open');
+      document.body.style.position = 'fixed';
+      document.body.style.top = '-' + savedScrollY + 'px';
+      document.body.style.width = '100%';
+      const f = m.querySelector('input, select, textarea, button');
+      if (f) setTimeout(() => f.focus(), 30);
+    }
+
+    function closeModal(id) {
+      const m = document.getElementById(id);
+      if (!m) return;
+      m.classList.add('hidden');
+      if (document.querySelectorAll('.modal-overlay:not(.hidden)').length === 0) {
+        document.body.classList.remove('modal-open');
+        document.body.style.position = '';
+        document.body.style.top = '';
+        document.body.style.width = '';
+        window.scrollTo(0, savedScrollY);
+      }
+      if (lastFocused && typeof lastFocused.focus === 'function') {
+        try { lastFocused.focus({ preventScroll: true }); } catch (e) {}
+        lastFocused = null;
+      }
+    }
+
+    function initDelegatedEvents() {
+      document.addEventListener('keydown', e => {
+        if (e.key === 'Escape') {
+          const open = document.querySelector('.modal-overlay:not(.hidden)');
+          if (open) closeModal(open.id);
+        }
+      });
+    }
+
+    async function refreshAll() {
+      const btn = document.getElementById('btnRefresh');
+      btn.classList.add('spinning');
+      await muatWaktuSolat();
+      await muatRekodHari();
+      if (appState.aktifTab === 'statistik') { await loadStatistik(); await loadKalendar(); }
+      if (appState.aktifTab === 'qada') await loadQada();
+      if (appState.aktifTab === 'sejarah') await loadSejarah();
+      btn.classList.remove('spinning');
+      showToast('Data disegerakkan.');
+    }
+
+    function registerServiceWorker() {
+      if (!('serviceWorker' in navigator)) return;
+      navigator.serviceWorker.register('sw.js').catch(() => {});
+    }
+
+    /* Semak semula status "lewat" setiap minit */
+    setInterval(() => { if (appState.waktuSolat) kemaskiniPaparanSolat(); }, 60000);
+  </script>
+</body>
+</html>
